@@ -4,11 +4,6 @@ import Router from 'vue-router'
 Vue.use(Router)
 import Layout from '@/layout'
 
-/* Router Modules */
-import componentsRouter from './modules/components'
-import chartsRouter from './modules/charts'
-import tableRouter from './modules/table'
-
 export const constantRoutes = [
   {
     path: '/redirect',
@@ -89,6 +84,18 @@ export const asyncRoutes = [
         component: () => import('@/views/excel/select-excel'),
         name: 'SelectExcel',
         meta: { title: '导演演员组合查询' }
+      }
+    ]
+  },
+  {
+    path: '/clipboard',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/clipboard/index'),
+        name: 'ClipboardDemo',
+        meta: { title: '最受欢迎查询', icon: 'clipboard' }
       }
     ]
   },

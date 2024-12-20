@@ -1,116 +1,84 @@
 <template>
-  <div class="app-container">
-
-    <div>
-      <FilenameOption v-model="filename" />
-      <AutoWidthOption v-model="autoWidth" />
-      <BookTypeOption v-model="bookType" />
-      <el-button :loading="downloadLoading" style="margin:0 0 20px 20px;" type="primary" icon="el-icon-document" @click="handleDownload">
-        Export Excel
-      </el-button>
-      <a href="https://panjiachen.github.io/vue-element-admin-site/feature/component/excel.html" target="_blank" style="margin-left:15px;">
-        <el-tag type="info">Documentation</el-tag>
-      </a>
+  <div class="container">
+    <!-- 右侧表格区域 -->
+    <div class="table-container">
+      <el-table :data="movieList" style="width: 100%">
+        <el-table-column prop="actorName1" label="演员1" :width="500"></el-table-column>
+        <el-table-column prop="actorName2" label="演员2" :width="500"></el-table-column>
+        <el-table-column prop="cooperationCount" label="合作次数" :width="300"></el-table-column>
+      </el-table>
     </div>
-
-    <el-table v-loading="listLoading" :data="list" element-loading-text="Loading..." border fit highlight-current-row>
-      <el-table-column align="center" label="Id" width="95">
-        <template slot-scope="scope">
-          {{ scope.$index }}
-        </template>
-      </el-table-column>
-      <el-table-column label="Title">
-        <template slot-scope="scope">
-          {{ scope.row.title }}
-        </template>
-      </el-table-column>
-      <el-table-column label="Author" width="110" align="center">
-        <template slot-scope="scope">
-          <el-tag>{{ scope.row.author }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="Readings" width="115" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.pageviews }}
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="Date" width="220">
-        <template slot-scope="scope">
-          <i class="el-icon-time" />
-          <span>{{ scope.row.timestamp | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/article'
-import { parseTime } from '@/utils'
-// options components
-import FilenameOption from './components/FilenameOption'
-import AutoWidthOption from './components/AutoWidthOption'
-import BookTypeOption from './components/BookTypeOption'
-
 export default {
-  name: 'ExportExcel',
-  components: { FilenameOption, AutoWidthOption, BookTypeOption },
   data() {
     return {
-      list: null,
-      listLoading: true,
-      downloadLoading: false,
-      filename: '',
-      autoWidth: true,
-      bookType: 'xlsx'
-    }
-  },
-  created() {
-    this.fetchData()
+      movieList: [], // 用于存储查询的演员合作数据
+    };
   },
   methods: {
-    fetchData() {
-      this.listLoading = true
-      fetchList().then(response => {
-        this.list = response.data.items
-        this.listLoading = false
-      })
+    async fetchMovies() {
+      this.movieList = [];    
+      let requests1 = this.fetchMoviesFromMySQL();
+      const results1 = await requests1;
+      this.movieList = this.movieList.concat(results1);
+
+      let requests2 = this.fetchMoviesFromHive();
+      const results2 = await requests2;
+      this.movieList = this.movieList.concat(results2);
+
+      let requests3 = this.fetchMoviesFromNeo4j();
+      const results3 = await requests3;
+      this.movieList = this.movieList.concat(results3);
     },
-    handleDownload() {
-      this.downloadLoading = true
-      import('@/vendor/Export2Excel').then(excel => {
-        const tHeader = ['Id', 'Title', 'Author', 'Readings', 'Date']
-        const filterVal = ['id', 'title', 'author', 'pageviews', 'display_time']
-        const list = this.list
-        const data = this.formatJson(filterVal, list)
-        excel.export_json_to_excel({
-          header: tHeader,
-          data,
-          filename: this.filename,
-          autoWidth: this.autoWidth,
-          bookType: this.bookType
-        })
-        this.downloadLoading = false
-      })
+
+    fetchMoviesFromMySQL() {
+      return this.$axios.get('/api/db1/movies/cooperation').then(res => res.data);
     },
-    formatJson(filterVal, jsonData) {
-      return jsonData.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
-        } else {
-          return v[j]
-        }
-      }))
-    }
+
+    fetchMoviesFromHive() {
+      return this.$axios.get('/api/db2/movies/cooperation').then(res => res.data);
+    },
+
+    fetchMoviesFromNeo4j() {
+      return this.$axios.get('/api/db3/movies/cooperation').then(res => res.data);
+    },
+  },
+  created() {
+    this.fetchMovies();
   }
-}
+};
 </script>
 
-<style>
-.radio-label {
-  font-size: 14px;
-  color: #606266;
-  line-height: 40px;
-  padding: 0 12px 0 30px;
+<style scoped>
+.container {
+  display: flex;
+  gap: 50px;
+  padding: 20px;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+.table-container {
+  flex: 2;
+  padding-left: 20px; /* 左侧间距 */
+  padding-right: 20px; /* 右侧间距 */
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.form-button {
+  flex: 1;
+  padding: 10px 0;
+  width: 100%;
+  height: 100%;
 }
 </style>

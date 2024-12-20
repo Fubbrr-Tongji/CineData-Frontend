@@ -1,107 +1,84 @@
 <template>
-  <div class="app-container">
-    <el-input v-model="filename" placeholder="Please enter the file name (default excel-list)" style="width:350px;" prefix-icon="el-icon-document" />
-    <el-button :loading="downloadLoading" style="margin-bottom:20px" type="primary" icon="el-icon-document" @click="handleDownload">
-      Export Selected Items
-    </el-button>
-    <a href="https://panjiachen.github.io/vue-element-admin-site/feature/component/excel.html" target="_blank" style="margin-left:15px;">
-      <el-tag type="info">Documentation</el-tag>
-    </a>
-    <el-table
-      ref="multipleTable"
-      v-loading="listLoading"
-      :data="list"
-      element-loading-text="拼命加载中"
-      border
-      fit
-      highlight-current-row
-      @selection-change="handleSelectionChange"
-    >
-      <el-table-column type="selection" align="center" />
-      <el-table-column align="center" label="Id" width="95">
-        <template slot-scope="scope">
-          {{ scope.$index }}
-        </template>
-      </el-table-column>
-      <el-table-column label="Title">
-        <template slot-scope="scope">
-          {{ scope.row.title }}
-        </template>
-      </el-table-column>
-      <el-table-column label="Author" width="110" align="center">
-        <template slot-scope="scope">
-          <el-tag>{{ scope.row.author }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="Readings" width="115" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.pageviews }}
-        </template>
-      </el-table-column>
-      <el-table-column align="center" label="PDate" width="220">
-        <template slot-scope="scope">
-          <i class="el-icon-time" />
-          <span>{{ scope.row.display_time }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
+  <div class="container">
+    <!-- 右侧表格区域 -->
+    <div class="table-container">
+      <el-table :data="movieList" style="width: 100%">
+        <el-table-column prop="actorName" label="演员" :width="500"></el-table-column>
+        <el-table-column prop="directorName" label="导演" :width="500"></el-table-column>
+        <el-table-column prop="cooperationCount" label="合作次数" :width="300"></el-table-column>
+      </el-table>
+    </div>
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/article'
-
 export default {
-  name: 'SelectExcel',
   data() {
     return {
-      list: null,
-      listLoading: true,
-      multipleSelection: [],
-      downloadLoading: false,
-      filename: ''
-    }
-  },
-  created() {
-    this.fetchData()
+      movieList: [], // 用于存储查询的演员和导演合作数据
+    };
   },
   methods: {
-    fetchData() {
-      this.listLoading = true
-      fetchList(this.listQuery).then(response => {
-        this.list = response.data.items
-        this.listLoading = false
-      })
+    async fetchMovies() {
+      this.movieList = [];    
+      let requests1 = this.fetchMoviesFromMySQL();
+      const results1 = await requests1;
+      this.movieList = this.movieList.concat(results1);
+
+      let requests2 = this.fetchMoviesFromHive();
+      const results2 = await requests2;
+      this.movieList = this.movieList.concat(results2);
+
+      let requests3 = this.fetchMoviesFromNeo4j();
+      const results3 = await requests3;
+      this.movieList = this.movieList.concat(results3);
     },
-    handleSelectionChange(val) {
-      this.multipleSelection = val
+
+    fetchMoviesFromMySQL() {
+      return this.$axios.get('/api/db1/movies/cooperation1').then(res => res.data);
     },
-    handleDownload() {
-      if (this.multipleSelection.length) {
-        this.downloadLoading = true
-        import('@/vendor/Export2Excel').then(excel => {
-          const tHeader = ['Id', 'Title', 'Author', 'Readings', 'Date']
-          const filterVal = ['id', 'title', 'author', 'pageviews', 'display_time']
-          const list = this.multipleSelection
-          const data = this.formatJson(filterVal, list)
-          excel.export_json_to_excel({
-            header: tHeader,
-            data,
-            filename: this.filename
-          })
-          this.$refs.multipleTable.clearSelection()
-          this.downloadLoading = false
-        })
-      } else {
-        this.$message({
-          message: 'Please select at least one item',
-          type: 'warning'
-        })
-      }
+
+    fetchMoviesFromHive() {
+      return this.$axios.get('/api/db2/movies/cooperation1').then(res => res.data);
     },
-    formatJson(filterVal, jsonData) {
-      return jsonData.map(v => filterVal.map(j => v[j]))
-    }
+
+    fetchMoviesFromNeo4j() {
+      return this.$axios.get('/api/db3/movies/cooperation1').then(res => res.data);
+    },
+  },
+  created() {
+    this.fetchMovies();
   }
-}
+};
 </script>
+
+<style scoped>
+.container {
+  display: flex;
+  gap: 50px;
+  padding: 20px;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+.table-container {
+  flex: 2;
+  padding-left: 20px; /* 左侧间距 */
+  padding-right: 20px; /* 右侧间距 */
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.form-button {
+  flex: 1;
+  padding: 10px 0;
+  width: 100%;
+  height: 100%;
+}
+</style>
