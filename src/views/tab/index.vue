@@ -2,14 +2,14 @@
   <div class="container">
     <!-- 左侧输入区域 -->
     <div class="form-container">
-      <el-form :model="filters" label-width="100px" ref="form">
+      <el-form ref="form" :model="filters" label-width="100px">
         <el-form-item label="电影名">
-          <el-input v-model="filters.movieName" placeholder="请输入电影名"></el-input>
+          <el-input v-model="filters.movieName" placeholder="请输入电影名" />
         </el-form-item>
         <div class="button-container">
-          <el-button type="primary" @click="searchMovies" class="form-button">查询</el-button>
+          <el-button type="primary" class="form-button" @click="searchMovies">查询</el-button>
           <!-- 重置按钮 -->
-          <el-button @click="resetForm" class="form-button">重置</el-button>
+          <el-button class="form-button" @click="resetForm">重置</el-button>
         </div>
 
         <!-- 显示筛选到的电影数量 -->
@@ -26,17 +26,17 @@
         <div class="total-count">
           Neo4j 查询耗时： {{ queryTime3 }} ms
         </div>
-        <el-button @click="showComparisonDialog" class="form-button">运行时间对比</el-button>
+        <el-button class="form-button" @click="showComparisonDialog">运行时间对比</el-button>
       </el-form>
     </div>
 
     <!-- 右侧表格区域 -->
     <div class="table-container">
       <el-table :data="movieList" style="width: 100%">
-        <el-table-column prop="movieName" label="电影名" :width="300"></el-table-column>
-        <el-table-column prop="asin" label="ASIN" :width="150"></el-table-column>
-        <el-table-column prop="originalName" label="原始名称" :width="300"></el-table-column>
-        <el-table-column prop="sourceLink" label="来源链接" :width="200"></el-table-column>
+        <el-table-column prop="movieName" label="电影名" :width="300" />
+        <el-table-column prop="asin" label="ASIN" :width="150" />
+        <el-table-column prop="originalName" label="原始名称" :width="300" />
+        <el-table-column prop="sourceLink" label="来源链接" :width="200" />
       </el-table>
     </div>
 
@@ -44,10 +44,10 @@
     <el-dialog :visible.sync="dialogVisible" title="运行时间对比" width="60%" @close="handleClose">
       <div class="charts-container">
         <!-- 折线图 -->
-        <div ref="lineChart" class="chart" style="height: 300px;"></div>
+        <div ref="lineChart" class="chart" style="height: 300px;" />
 
         <!-- 饼状图 -->
-        <div ref="pieChart" class="chart" style="height: 300px;"></div>
+        <div ref="pieChart" class="chart" style="height: 300px;" />
       </div>
       <div slot="footer">
         <el-button @click="handleClose">关闭</el-button>
@@ -57,171 +57,169 @@
 </template>
 
 <script>
-import * as echarts from 'echarts';
+import * as echarts from 'echarts'
 export default {
   data() {
     return {
       // 控制弹出框显示/隐藏
       dialogVisible: false,
       filters: {
-        movieName: '',
+        movieName: ''
       },
       movieList: [], // 用于存储查询的电影列表
       totalCount: 0, // 用于存储筛选到的电影数量
       queryTime1: 0, // MySQL查询时间
       queryTime2: 0, // Hive查询时间
-      queryTime3: 0, // Neo4j查询时间
-    };
+      queryTime3: 0 // Neo4j查询时间
+    }
   },
   methods: {
     // 显示弹出框
     showComparisonDialog() {
-      this.dialogVisible = true;
+      this.dialogVisible = true
       this.$nextTick(() => {
-        this.initCharts();
-      });
+        this.initCharts()
+      })
     },
     // 初始化图表
     initCharts() {
       // 初始化折线图
-      this.initLineChart();
+      this.initLineChart()
       // 初始化饼状图
-      this.initPieChart();
+      this.initPieChart()
     },
     // 折线图初始化
     initLineChart() {
-      const lineChart = echarts.init(this.$refs.lineChart);
+      const lineChart = echarts.init(this.$refs.lineChart)
       const lineOptions = {
         title: {
-          text: '折线图运行时间对比',
+          text: '折线图运行时间对比'
         },
         tooltip: {
-          trigger: 'axis',
+          trigger: 'axis'
         },
         legend: {
-          data: ['运行时间'],
+          data: ['运行时间']
         },
         xAxis: {
           type: 'category',
-          data: ['MySQL', 'Hive', 'Neo4j'],
+          data: ['MySQL', 'Hive', 'Neo4j']
         },
         yAxis: {
-          type: 'value',
+          type: 'value'
         },
         series: [
           {
             name: '运行时间/ms',
             type: 'line',
-            data: [this.queryTime1, this.queryTime2, this.queryTime3],
-          },
-        ],
-      };
-      lineChart.setOption(lineOptions);
+            data: [this.queryTime1, this.queryTime2, this.queryTime3]
+          }
+        ]
+      }
+      lineChart.setOption(lineOptions)
     },
     // 饼状图初始化
     initPieChart() {
-      const pieChart = echarts.init(this.$refs.pieChart);
+      const pieChart = echarts.init(this.$refs.pieChart)
       const pieOptions = {
         title: {
           text: '饼图运行时间对比',
-          left: 'center',
+          left: 'center'
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
         },
         legend: {
           orient: 'vertical',
           left: 'left',
-          data: ['MySQL', 'Hive', 'Neo4j'],
+          data: ['MySQL', 'Hive', 'Neo4j']
         },
         series: [
           {
-            name: '运行时间/ms',
+            name: '运��时间/ms',
             type: 'pie',
             radius: '50%',
             data: [
               { value: this.queryTime1, name: 'MySQL' },
               { value: this.queryTime2, name: 'Hive' },
-              { value: this.queryTime3, name: 'Neo4j' },
-            ],
-          },
-        ],
-      };
-      pieChart.setOption(pieOptions);
+              { value: this.queryTime3, name: 'Neo4j' }
+            ]
+          }
+        ]
+      }
+      pieChart.setOption(pieOptions)
     },
     // 关闭弹出框
     handleClose() {
-      this.dialogVisible = false;
+      this.dialogVisible = false
     },
     // 确认按钮点击处理
     handleOk() {
-      this.dialogVisible = false;
+      this.dialogVisible = false
     },
     // 处理多个数据库的接口请求
     async searchMovies() {
       // 清空现有电影数据
-      this.movieList = [];
-      this.totalCount = 0;
+      this.movieList = []
+      this.totalCount = 0
 
-      const startTime1 = Date.now();
-      let requests1 = this.fetchMoviesFromMySQL();
-      const results1 = await requests1;
-      this.movieList = this.movieList.concat(results1);
-      this.totalCount = this.movieList.length;
-      const endTime1 = Date.now();
-      this.queryTime1 = endTime1 - startTime1; // 保存MySQL查询时间
+      const startTime1 = Date.now()
+      const requests1 = this.fetchMoviesFromMySQL()
+      const results1 = await requests1
+      this.movieList = this.movieList.concat(results1)
+      this.totalCount = this.movieList.length
+      const endTime1 = Date.now()
+      this.queryTime1 = endTime1 - startTime1// 保存MySQL查询时间
 
-      const startTime2 = Date.now();
-      let requests2 = this.fetchMoviesFromHive();
-      const results2 = await requests2;
-      this.movieList = this.movieList.concat(results2);
-      const endTime2 = Date.now();
-      this.queryTime2 = endTime2 - startTime2; // 保存Hive查询时间
+      const startTime2 = Date.now()
+      const requests2 = this.fetchMoviesFromHive()
+      await requests2
+      const endTime2 = Date.now()
+      this.queryTime2 = endTime2 - startTime2// 保存Hive查询时间
 
-      const startTime3 = Date.now();
-      let requests3 = this.fetchMoviesFromNeo4j();
-      const results3 = await requests3;
-      this.movieList = this.movieList.concat(results3);
-      const endTime3 = Date.now();
-      this.queryTime3 = endTime3 - startTime3; // 保存Neo4j查询时间
+      const startTime3 = Date.now()
+      const requests3 = this.fetchMoviesFromNeo4j()
+      await requests3
+      const endTime3 = Date.now()
+      this.queryTime3 = endTime3 - startTime3// 保存Neo4j查询时间
     },
 
     // 获取MySQL数据库的电影数据
     fetchMoviesFromMySQL() {
       const params = {
-        movieName: this.filters.movieName,
-      };
-      return this.$axios.get('/api/db1/movies/source', { params }).then((res) => res.data);
+        movieName: this.filters.movieName
+      }
+      return this.$axios.get('/api/db1/movies/source', { params }).then((res) => res.data)
     },
 
     // 获取Hive数据库的电影数据
     fetchMoviesFromHive() {
       const params = {
-        movieName: this.filters.movieName,
-      };
-      return this.$axios.get('/api/db2/movies/source', { params }).then((res) => res.data);
+        movieName: this.filters.movieName
+      }
+      return this.$axios.get('/api/db2/movies/source', { params }).then((res) => res.data)
     },
 
     // 获取Neo4j数据库的电影数据
     fetchMoviesFromNeo4j() {
       const params = {
-        movieName: this.filters.movieName,
-      };
-      return this.$axios.get('/api/db3/movies/source', { params }).then((res) => res.data);
+        movieName: this.filters.movieName
+      }
+      return this.$axios.get('/api/db3/movies/source', { params }).then((res) => res.data)
     },
 
     // 重置表单方法
     resetForm() {
-      this.filters.movieName = '';
-      this.movieList = [];
-      this.totalCount = 0;
-      this.queryTime1 = 0;
-      this.queryTime2 = 0;
-      this.queryTime3 = 0;
-    },
-  },
-};
+      this.filters.movieName = ''
+      this.movieList = []
+      this.totalCount = 0
+      this.queryTime1 = 0
+      this.queryTime2 = 0
+      this.queryTime3 = 0
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -234,7 +232,7 @@ export default {
 }
 
 .form-container {
-  flex: 4; /* 增加左侧区域的宽度 */
+  flex: 4; /* 增���左侧区域的宽度 */
   padding-right: 20px;
 }
 
