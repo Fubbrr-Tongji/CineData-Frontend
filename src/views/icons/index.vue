@@ -246,8 +246,11 @@ export default {
         this.totalCount = 0
 
         if (this.filters.Date && this.filters.Date.length === 2) {
-          this.filters.startDate = this.filters.Date[0]
-          this.filters.endDate = this.filters.Date[1]
+          // 将开始时间格式化为 'yyyy-MM-dd' 格式
+          this.filters.startDate = this.filters.Date[0].toISOString().split('T')[0]
+
+          // 将结束时间格式化为 'yyyy-MM-dd' 格式
+          this.filters.endDate = this.filters.Date[1].toISOString().split('T')[0]
         }
 
         const startTime1 = Date.now()
