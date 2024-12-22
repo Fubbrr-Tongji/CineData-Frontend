@@ -192,7 +192,7 @@ export default {
       const params = {
         movieName: this.filters.movieName,
       };
-      return this.$axios.get('/api/db1/movies/movieName', { params }).then((res) => res.data);
+      return this.$axios.get('/api/db1/movies/source', { params }).then((res) => res.data);
     },
 
     // 获取Hive数据库的电影数据
@@ -200,7 +200,7 @@ export default {
       const params = {
         movieName: this.filters.movieName,
       };
-      return this.$axios.get('/api/db2/movies/movieName', { params }).then((res) => res.data);
+      return this.$axios.get('/api/db2/movies/source', { params }).then((res) => res.data);
     },
 
     // 获取Neo4j数据库的电影数据
@@ -208,7 +208,7 @@ export default {
       const params = {
         movieName: this.filters.movieName,
       };
-      return this.$axios.get('/api/db3/movies/movieName', { params }).then((res) => res.data);
+      return this.$axios.get('/api/db3/movies/source', { params }).then((res) => res.data);
     },
 
     // 重置表单方法

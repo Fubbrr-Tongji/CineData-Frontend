@@ -202,7 +202,7 @@
         const params = {
             genre: this.filters.genre, // 添加风格过滤条件
         };
-        return this.$axios.get('/api/db1/movies/movieStyle1', { params }).then((res) => res.data);
+        return this.$axios.get('/api/db1/movies/filter', { params }).then((res) => res.data);
       },
   
       // 获取Hive数据库的电影数据
@@ -210,7 +210,7 @@
         const params = {
             genre: this.filters.genre, // 添加风格过滤条件
         };
-        return this.$axios.get('/api/db2/movies/movieStyle1', { params }).then((res) => res.data);
+        return this.$axios.get('/api/db2/movies/filter', { params }).then((res) => res.data);
       },
   
       // 获取Neo4j数据库的电影数据
@@ -218,7 +218,7 @@
         const params = {
             genre: this.filters.genre, // 添加风格过滤条件
         };
-        return this.$axios.get('/api/db3/movies/movieStyle1', { params }).then((res) => res.data);
+        return this.$axios.get('/api/db3/movies/filter', { params }).then((res) => res.data);
       },
   
       // 重置表单方法
