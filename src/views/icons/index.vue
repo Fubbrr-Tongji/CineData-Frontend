@@ -2,40 +2,41 @@
   <div class="container">
     <!-- 左侧输入区域 -->
     <div class="form-container">
-      <el-form :model="filters" label-width="100px" ref="form">
+      <el-form ref="form" :model="filters" label-width="100px">
         <el-form-item label="开始时间">
-          <el-date-picker v-model="filters.startDate" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :disabled-date="disabledDate"></el-date-picker>
+          <el-date-picker v-model="filters.Date" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :disabled-date="disabledDate" />
         </el-form-item>
 
         <el-form-item label="电影名">
-          <el-input v-model="filters.movieName" placeholder="请输入电影名"></el-input>
+          <el-input v-model="filters.movieName" placeholder="请输入电影名" />
         </el-form-item>
 
         <el-form-item label="导演">
-          <el-input v-model="filters.director" placeholder="请输入导演名"></el-input>
+          <el-input v-model="filters.director" placeholder="请输入导演名" />
         </el-form-item>
 
         <el-form-item label="演员">
-          <el-input v-model="filters.actor" placeholder="请输入演员名"></el-input>
+          <el-input v-model="filters.actor" placeholder="请输入演员名" />
         </el-form-item>
 
         <!-- 电影风格下拉框 -->
         <el-form-item label="电影风格">
           <el-select v-model="filters.genre" placeholder="请选择电影风格" :input-width="'100%'">
-            <el-option label="请选择" value=""></el-option>
+            <el-option label="请选择" value="" />
             <el-option v-for="item in genres" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="评分">
-          <el-input-number 
-            v-model="filters.rating" 
-            :min="0" 
-            :max="5" 
-            :step="0.1" 
-            precision="1" 
-            placeholder="评分" 
-          ></el-input-number>
+          <el-input-number
+            v-model="filters.rating"
+            :min="0"
+            :max="5"
+            :step="0.1"
+            precision="1"
+            placeholder="评分"
+            @change="handleRatingChange"
+          />
         </el-form-item>
 
         <!-- 选择积极评价 -->
@@ -47,108 +48,124 @@
         </el-form-item>
 
         <div class="button-container">
-          <el-button type="primary" @click="searchMovies" class="form-button">查询</el-button>
+          <el-button type="primary" class="form-button" @click="searchMovies">查询</el-button>
           <!-- 重置按钮 -->
-          <el-button @click="resetForm" class="form-button">重置</el-button>
+          <el-button class="form-button" @click="resetForm">重置</el-button>
         </div>
 
         <!-- 显示筛选到的电影数量 -->
         <div class="total-count">
           共筛选到 {{ totalCount }} 个电影数据
         </div>
+
         <!-- 显示查询时间 -->
         <div class="total-count">
-          MySQL 查询耗时： {{ queryTime1 }} 
+          MySQL 查询耗时： {{ queryTime1 }} ms
         </div>
         <div class="total-count">
-          Hive 查询耗时： {{ queryTime2 }} 
+          Hive 查询耗时： {{ queryTime2 }} ms
         </div>
         <div class="total-count">
-          Neo4j 查询耗时： {{ queryTime3 }} 
+          Neo4j 查询耗时： {{ queryTime3 }} ms
         </div>
-        <!-- 运行时间对比按钮 -->
-        <el-button @click="showComparisonDialog" class="form-button">运行时间对比</el-button>
-        <!-- 弹出框 -->
-    <!-- 弹出框 -->
-    <el-dialog
-      :visible.sync="dialogVisible"
-      title="运行时间对比"
-      width="60%"
-      @close="handleClose"
-    >
-      <div class="charts-container">
-        <!-- 折线图 -->
-        <div ref="lineChart" class="chart" style="height: 300px;"></div>
 
-        <!-- 饼状图 -->
-        <div ref="pieChart" class="chart" style="height: 300px;"></div>
-      </div>
-      <div slot="footer">
-        <el-button @click="handleClose">关闭</el-button>
-      </div>
-    </el-dialog>
+        <!-- 运行时间对比按钮 -->
+        <el-button class="form-button" @click="showComparisonDialog">运行时间对比</el-button>
+        <!-- 弹出框 -->
+        <!-- 弹出框 -->
+        <el-dialog
+          :visible.sync="dialogVisible"
+          title="运行时间对比"
+          width="60%"
+          @close="handleClose"
+        >
+          <div class="charts-container">
+            <!-- 折线图 -->
+            <div ref="lineChart" class="chart" style="height: 300px;" />
+
+            <!-- 饼状图 -->
+            <div ref="pieChart" class="chart" style="height: 300px;" />
+          </div>
+
+          <div slot="footer">
+            <el-button @click="handleClose">关闭</el-button>
+          </div>
+        </el-dialog>
       </el-form>
     </div>
     <!-- 右侧表格区域 -->
+
     <div class="table-container">
       <el-table :data="movieList" style="width: 100%">
-        <el-table-column prop="movieName" label="电影名" :width="400"></el-table-column>
-        <el-table-column prop="releaseDate" label="上映时间" :min-width="150"></el-table-column>
-        <el-table-column prop="genre" label="电影风格" :min-width="150"></el-table-column>
+        <el-table-column prop="movieName" label="电影名" :width="400" />
+        <el-table-column prop="releaseDate" label="上映时间" :min-width="150" />
+        <el-table-column prop="genre" label="电影风格" :min-width="150" />
       </el-table>
     </div>
   </div>
 </template>
 
 <script>
-import * as echarts from 'echarts';
+import * as echarts from 'echarts'
 export default {
   data() {
     return {
       // 控制弹出框显示/隐藏
       dialogVisible: false,
       filters: {
-        startDate: [null, null],
+        Date: [],
+        startDate: null,
         endDate: null,
         movieName: '',
         director: '',
         actor: '',
         genre: '', // 默认为空，表示没有选择
-        rating: 0,
-        isPositiveReview: false, // 新增字段，选择积极评价
+        rating: 0.00,
+        isPositiveReview: false // 新增字段，选择积极评价
       },
       movieList: [], // 用于存储查询的电影列表
       totalCount: 0, // 用于存储筛选到的电影数量
       genres: [
-        'Action', 'Comedy', 'Drama', 'Adventure', 'Horror', 'LGBTQ', 'Romance', 'Arthouse', 
-        'Suspense', 'Documentary', 'Kids', 'Science Fiction', 'Special Interest', 'International', 
-        'Animation', 'Sports', 'Fantasy', 'Historical', 'Unscripted', 'Western', 'Military and War', 
-        'Arts  Entertainment  and Culture', 'Music Videos and Concerts', 'Young Adult Audience', 
+        'Action', 'Comedy', 'Drama', 'Adventure', 'Horror', 'LGBTQ', 'Romance', 'Arthouse',
+        'Suspense', 'Documentary', 'Kids', 'Science Fiction', 'Special Interest', 'International',
+        'Animation', 'Sports', 'Fantasy', 'Historical', 'Unscripted', 'Western', 'Military and War',
+        'Arts  Entertainment  and Culture', 'Music Videos and Concerts', 'Young Adult Audience',
         'Anime', 'Talk Show and Variety', 'Faith and Spirituality', 'Fitness'
       ], // 下拉框选项
       queryTime1: 0, // 第一个数据库的查询时间
       queryTime2: 0, // 第二个数据库的查询时间
-      queryTime3: 0, // 第三个数据库的查询时间
-    };
+      queryTime3: 0 // 第三个数据库的查询时间
+    }
   },
   methods: {
+    handleRatingChange() {
+      // 确保 rating 被转换为 double 类型
+      if (typeof this.filters.rating !== 'number') {
+        this.filters.rating = parseFloat(this.filters.rating)
+      }
+    },
+    // 超时函数，500ms后自动返回拒绝的 Promise
+    timeoutPromise(ms) {
+      return new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时')), ms))
+    },
+
     // 显示弹出框
     showComparisonDialog() {
-      this.dialogVisible = true;
+      this.dialogVisible = true
       this.$nextTick(() => {
-        this.initCharts();
-      });
+        this.initCharts()
+      })
     },
     // 初始化图表
     initCharts() {
       // 初始化折线图
-      this.initLineChart();
+      this.initLineChart()
       // 初始化饼状图
-      this.initPieChart();
+      this.initPieChart()
     },
     // 折线图初始化
     initLineChart() {
-      const lineChart = echarts.init(this.$refs.lineChart);
+      const lineChart = echarts.init(this.$refs.lineChart)
       const lineOptions = {
         title: {
           text: '折线图运行时间对比'
@@ -173,12 +190,12 @@ export default {
             data: [this.queryTime1, this.queryTime2, this.queryTime3]
           }
         ]
-      };
-      lineChart.setOption(lineOptions);
+      }
+      lineChart.setOption(lineOptions)
     },
     // 饼状图初始化
     initPieChart() {
-      const pieChart = echarts.init(this.$refs.pieChart);
+      const pieChart = echarts.init(this.$refs.pieChart)
       const pieOptions = {
         title: {
           text: '饼图运行时间对比',
@@ -201,298 +218,741 @@ export default {
             data: [
               { value: this.queryTime1, name: 'MySQL' },
               { value: this.queryTime2, name: 'Hive' },
-              { value: this.queryTime3, name: 'Neo4j' },
+              { value: this.queryTime3, name: 'Neo4j' }
             ]
           }
         ]
-      };
-      pieChart.setOption(pieOptions);
+      }
+      pieChart.setOption(pieOptions)
     },
     // 关闭弹出框
     handleClose() {
-      this.dialogVisible = false;
+      this.dialogVisible = false
     },
     // 确认按钮点击处理
     handleOk() {
       // 在这里处理确认逻辑
-      console.log("确认对比");
-      this.dialogVisible = false; // 关闭弹出框
+      console.log('确认对比')
+      this.dialogVisible = false // 关闭弹出框
     },
     // 禁用今天之后的日期
     disabledDate(date) {
-      return date.getTime() > Date.now();  // 返回 true 表示该日期不可选
+      return date.getTime() > Date.now() // 返回 true 表示该日期不可选
     },
     // 处理多个数据库的接口请求
     async searchMovies() {
-      // 第一个数据库查询
-      const startTime1 = Date.now(); // 记录第一个数据库查询开始时间
-      let requests1 = this.generateRequests(1); // 生成第一个数据库的请求
-      const results1 = await Promise.all(requests1); // 执行所有请求
-      this.movieList = results1.flat(); // 合并所有结果
-      this.totalCount = this.movieList.length; // 更新筛选到的电影数量
-      const endTime1 = Date.now(); // 记录第一个数据库查询结束时间
-      this.queryTime1 = endTime1 - startTime1; // 计算第一个数据库查询耗时
+      try {
+        this.movieList = [] // 清空之前的数据
+        this.totalCount = 0
 
-      // 第二个数据库查询（只记录查询时间，不合并数据）
-      const startTime2 = Date.now(); // 记录第二个数据库查询开始时间
-      let requests2 = this.generateRequests(2); // 生成第二个数据库的请求
-      await Promise.all(requests2); // 执行所有请求（不需要结果）
-      const endTime2 = Date.now(); // 记录第二个数据库查询结束时间
-      this.queryTime2 = endTime2 - startTime2; // 计算第二个数据库查询耗时
+        if (this.filters.Date && this.filters.Date.length === 2) {
+          this.filters.startDate = this.filters.Date[0]
+          this.filters.endDate = this.filters.Date[1]
+        }
 
-      // 第三个数据库查询（只记录查询时间，不合并数据）
-      const startTime3 = Date.now(); // 记录第三个数据库查询开始时间
-      let requests3 = this.generateRequests(3); // 生成第三个数据库的请求
-      await Promise.all(requests3); // 执行所有请求（不需要结果）
-      const endTime3 = Date.now(); // 记录第三个数据库查询结束时间
-      this.queryTime3 = endTime3 - startTime3; // 计算第三个数据库查询耗时
-    },
+        const startTime1 = Date.now()
+        const requests1 = []
+        // 根据筛选条件添加请求
+        if (this.filters.startDate && this.filters.endDate) {
+          requests1.push(this.fetchFromDB1ByDate())
+        }
+        if (this.filters.movieName) {
+          requests1.push(this.fetchFromDB1ByMovieName())
+        }
+        if (this.filters.director) {
+          requests1.push(this.fetchFromDB1ByDirector())
+        }
+        if (this.filters.actor) {
+          requests1.push(this.fetchFromDB1ByActor())
+        }
+        if (this.filters.genre) {
+          requests1.push(this.fetchFromDB1ByGenre())
+        }
+        if (this.filters.rating > 0) {
+          requests1.push(this.fetchFromDB1ByRating())
+        }
+        if (this.filters.isPositiveReview) {
+          requests1.push(this.fetchFromDB1ByPositiveReview())
+        }
 
-    // 根据不同的数据库生成请求
-    generateRequests(databaseId) {
-      let requests = [];
-      switch (databaseId) {
-        case 1:
-          // 第一个数据库的查询接口
-          if (this.filters.startDate.length > 0 || this.filters.endDate) {
-            requests.push(this.fetchFromDB1ByDate());
-          }
-          if (this.filters.movieName) {
-            requests.push(this.fetchFromDB1ByMovieName());
-          }
-          if (this.filters.director) {
-            requests.push(this.fetchFromDB1ByDirector());
-          }
-          if (this.filters.actor) {
-            requests.push(this.fetchFromDB1ByActor());
-          }
-          if (this.filters.genre) {
-            requests.push(this.fetchFromDB1ByGenre());
-          }
-          if (this.filters.rating > 0) {
-            requests.push(this.fetchFromDB1ByRating());
-          }
-          if (this.filters.isPositiveReview !== undefined) {
-            requests.push(this.fetchFromDB1ByPositiveReview());
-          }
-          break;
+        // 如果没有任何筛选条件，返回错误提示
+        if (requests1.length === 0) {
+          this.$message.error('请至少选择一个筛选条件')
+          return
+        }
 
-        case 2:
-          // 第二个数据库的查询接口
-          if (this.filters.startDate.length > 0 || this.filters.endDate) {
-            requests.push(this.fetchFromDB2ByDate());
-          }
-          if (this.filters.movieName) {
-            requests.push(this.fetchFromDB2ByMovieName());
-          }
-          if (this.filters.director) {
-            requests.push(this.fetchFromDB2ByDirector());
-          }
-          if (this.filters.actor) {
-            requests.push(this.fetchFromDB2ByActor());
-          }
-          if (this.filters.genre) {
-            requests.push(this.fetchFromDB2ByGenre());
-          }
-          if (this.filters.rating > 0) {
-            requests.push(this.fetchFromDB2ByRating());
-          }
-          if (this.filters.isPositiveReview !== undefined) {
-            requests.push(this.fetchFromDB2ByPositiveReview());
-          }
-          break;
+        // 为每个请求加上超时机制
+        const timeout = 10000 // 设置超时时间为500ms
+        const wrappedRequests = requests1.map(request =>
+          Promise.race([
+            request, // 原始请求
+            this.timeoutPromise(timeout) // 超时 Promise
+          ])
+            .catch(error => {
+              console.error('请求失败或超时:', error.message)
+              return []
+            })
+        )
 
-        case 3:
-          // 第三个数据库的查询接口
-          if (this.filters.startDate.length > 0 || this.filters.endDate) {
-            requests.push(this.fetchFromDB3ByDate());
-          }
-          if (this.filters.movieName) {
-            requests.push(this.fetchFromDB3ByMovieName());
-          }
-          if (this.filters.director) {
-            requests.push(this.fetchFromDB3ByDirector());
-          }
-          if (this.filters.actor) {
-            requests.push(this.fetchFromDB3ByActor());
-          }
-          if (this.filters.genre) {
-            requests.push(this.fetchFromDB3ByGenre());
-          }
-          if (this.filters.rating > 0) {
-            requests.push(this.fetchFromDB3ByRating());
-          }
-          if (this.filters.isPositiveReview !== undefined) {
-            requests.push(this.fetchFromDB3ByPositiveReview());
-          }
-          break;
+        // 使用 Promise.all 执行所有请求，并捕获可能的错误
+        const results1 = await Promise.all(wrappedRequests)
 
-        default:
-          break;
+        // 过滤掉空数组
+        const nonEmptyResults = results1.filter(result => result && Array.isArray(result) && result.length > 1)
+
+        // 如果有返回数据，取交集
+        if (nonEmptyResults.length > 0) {
+          // 过滤掉 movieName 为 "*" 或无效数据
+          const filteredResults = nonEmptyResults.map(result =>
+            result.filter(movie => movie.movieName && movie.movieName !== '*')
+          )
+
+          // 获取所有非空请求的交集
+          let intersection = filteredResults[0]
+          for (let i = 1; i < filteredResults.length; i++) {
+            const currentSet = new Set(filteredResults[i].map(movie => movie.movieName))
+            intersection = intersection.filter(movie => currentSet.has(movie.movieName))
+          }
+
+          // 更新电影列表
+          this.movieList = intersection
+
+          // 如果没有交集，给出提示
+          if (this.movieList.length === 0) {
+            this.$message.warning('未找到符合条件的电影')
+          }
+        } else {
+          this.$message.warning('未找到符合条件的电影')
+        }
+
+        const endTime1 = Date.now()
+        this.queryTime1 = endTime1 - startTime1
+
+        this.totalCount = this.movieList.length
+
+        const startTime2 = Date.now()
+        const requests2 = []
+        // 根据筛选条件添加请求
+        if (this.filters.startDate && this.filters.endDate) {
+          requests2.push(this.fetchFromDB2ByDate())
+        }
+        if (this.filters.movieName) {
+          requests2.push(this.fetchFromDB2ByMovieName())
+        }
+        if (this.filters.director) {
+          requests2.push(this.fetchFromDB2ByDirector())
+        }
+        if (this.filters.actor) {
+          requests2.push(this.fetchFromDB2ByActor())
+        }
+        if (this.filters.genre) {
+          requests2.push(this.fetchFromDB2ByGenre())
+        }
+        if (this.filters.rating > 0) {
+          requests2.push(this.fetchFromDB2ByRating())
+        }
+        if (this.filters.isPositiveReview) {
+          requests2.push(this.fetchFromDB2ByPositiveReview())
+        }
+
+        // 如果没有任何筛选条件，返回错误提示
+        if (requests2.length === 0) {
+          this.$message.error('请至少选择一个筛选条件')
+          return
+        }
+        const wrappedRequests2 = requests2.map(request =>
+          Promise.race([
+            request, // 原始请求
+            this.timeoutPromise(timeout) // 超时 Promise
+          ])
+            .catch(error => {
+              console.error('请求失败或超时:', error.message)
+              return []
+            })
+        )
+
+        // 使用 Promise.all 执行所有请求，并捕获可能的错误
+        const results2 = await Promise.all(wrappedRequests2)
+
+        // 过滤掉空数组
+        const nonEmptyResults2 = results2.filter(result => result && Array.isArray(result) && result.length > 1)
+
+        // 如果有返回数据，取交集
+        if (nonEmptyResults2.length > 0) {
+          // 过滤掉 movieName 为 "*" 或无效数据
+          const filteredResults2 = nonEmptyResults2.map(result =>
+            result.filter(movie => movie.movieName && movie.movieName !== '*')
+          )
+
+          // 获取所有非空请求的交集
+          let intersection2 = filteredResults2[0]
+          for (let i = 1; i < filteredResults2.length; i++) {
+            const currentSet = new Set(filteredResults2[i].map(movie => movie.movieName))
+            intersection2 = intersection2.filter(movie => currentSet.has(movie.movieName))
+          }
+        }
+
+        const endTime2 = Date.now()
+        this.queryTime2 = endTime2 - startTime2
+        // 处理数据库3的请求
+        const startTime3 = Date.now()
+        const requests3 = []
+
+        if (this.filters.startDate && this.filters.endDate) {
+          requests3.push(this.fetchFromDB3ByDate())
+        }
+        if (this.filters.movieName) {
+          requests3.push(this.fetchFromDB3ByMovieName())
+        }
+        if (this.filters.director) {
+          requests3.push(this.fetchFromDB3ByDirector())
+        }
+        if (this.filters.actor) {
+          requests3.push(this.fetchFromDB3ByActor())
+        }
+        if (this.filters.genre) {
+          requests3.push(this.fetchFromDB3ByGenre())
+        }
+        if (this.filters.rating > 0) {
+          requests3.push(this.fetchFromDB3ByRating()) // 修改为数据库3的请求
+        }
+        if (this.filters.isPositiveReview) {
+          requests3.push(this.fetchFromDB3ByPositiveReview())
+        }
+
+        if (requests3.length === 0) {
+          this.$message.error('请至少选择一个筛选条件')
+          return
+        }
+
+        const wrappedRequests3 = requests3.map(request =>
+          Promise.race([
+            request, // 原始请求
+            this.timeoutPromise(timeout) // 超时 Promise
+          ])
+            .catch(error => {
+              console.error('请求失败或超时:', error.message)
+              return [] // 返回空数组以便后续处理
+            })
+        )
+
+        const results3 = await Promise.all(wrappedRequests3)
+
+        // 过滤掉空数组
+        const nonEmptyResults3 = results3.filter(result => result && Array.isArray(result) && result.length > 1)
+
+        if (nonEmptyResults3.length > 0) {
+          const filteredResults3 = nonEmptyResults3.map(result =>
+            result.filter(movie => movie.movieName && movie.movieName !== '*')
+          )
+
+          let intersection3 = filteredResults3[0]
+          for (let i = 1; i < filteredResults3.length; i++) {
+            const currentSet = new Set(filteredResults3[i].map(movie => movie.movieName))
+            intersection3 = intersection3.filter(movie => currentSet.has(movie.movieName))
+          }
+
+          // 这里可以根据需要对数据库3的交集结果做进一步处理
+        }
+
+        const endTime3 = Date.now()
+        this.queryTime3 = endTime3 - startTime3
+      } catch (error) {
+        console.error('查询过程中发生错误:', error)
+        this.$message.error('查询失败，请稍后重试')
       }
-      return requests;
     },
-
     // 第一个数据库的查询接口方法
     fetchFromDB1ByDate() {
-      const params = {
-        startDate: this.filters.startDate,
-        endDate: this.filters.endDate,
-      };
-      return this.$axios.get('/api/db1/movies/date', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/date',
+        params: { 'startDate': this.filters.startDate, 'endDate': this.filters.endDate },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('DB1 返回的数据格式不正确:', response.data)
+            return []
+          }
+        })
+        .catch(error => {
+          console.log('请求错误:', error)
+          return []
+        })
     },
     fetchFromDB1ByMovieName() {
-      const params = {
-        movieName: this.filters.movieName,
-      };
-      return this.$axios.get('/api/db1/movies/movieName', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/movieName',
+        params: { 'movieName': this.filters.movieName },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB1ByDirector() {
-      const params = {
-        director: this.filters.director,
-      };
-      return this.$axios.get('/api/db1/movies/director', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/director',
+        params: { 'director': this.filters.director },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB1ByActor() {
-      const params = {
-        actor: this.filters.actor,
-      };
-      return this.$axios.get('/api/db1/movies/actor', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/actor',
+        params: { 'actor': this.filters.actor },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB1ByGenre() {
-      const params = {
-        genre: this.filters.genre,
-      };
-      return this.$axios.get('/api/db1/movies/genre', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/genre',
+        params: { 'genre': this.filters.genre },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB1ByRating() {
-      const params = {
-        rating: this.filters.rating,
-      };
-      return this.$axios.get('/api/db1/movies/rating', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/rating',
+        params: { 'rating': this.filters.rating },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB1ByPositiveReview() {
-      const params = {
-        isPositiveReview: this.filters.isPositiveReview,
-      };
-      return this.$axios.get('/api/db1/movies/positiveReview', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/positiveReview',
+        params: { 'isPositiveReview': this.filters.isPositiveReview },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
-
-    // 第二个数据库的查询接口方法
     fetchFromDB2ByDate() {
-      const params = {
-        startDate: this.filters.startDate,
-        endDate: this.filters.endDate,
-      };
-      return this.$axios.get('/api/db2/movies/date', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/date',
+        params: { 'startDate': this.filters.startDate, 'endDate': this.filters.endDate },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB2ByMovieName() {
-      const params = {
-        movieName: this.filters.movieName,
-      };
-      return this.$axios.get('/api/db2/movies/movieName', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/movieName',
+        params: { 'movieName': this.filters.movieName },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB2ByDirector() {
-      const params = {
-        director: this.filters.director,
-      };
-      return this.$axios.get('/api/db2/movies/director', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/director',
+        params: { 'director': this.filters.director },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB2ByActor() {
-      const params = {
-        actor: this.filters.actor,
-      };
-      return this.$axios.get('/api/db2/movies/actor', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/actor',
+        params: { 'actor': this.filters.actor },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB2ByGenre() {
-      const params = {
-        genre: this.filters.genre,
-      };
-      return this.$axios.get('/api/db2/movies/genre', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/genre',
+        params: { 'genre': this.filters.genre },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB2ByRating() {
-      const params = {
-        rating: this.filters.rating,
-      };
-      return this.$axios.get('/api/db2/movies/rating', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/rating',
+        params: { 'rating': this.filters.rating },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB2ByPositiveReview() {
-      const params = {
-        isPositiveReview: this.filters.isPositiveReview,
-      };
-      return this.$axios.get('/api/db2/movies/positiveReview', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/positiveReview',
+        params: { 'isPositiveReview': this.filters.isPositiveReview },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
-
-    // 第三个数据库的查询接口方法
     fetchFromDB3ByDate() {
-      const params = {
-        startDate: this.filters.startDate,
-        endDate: this.filters.endDate,
-      };
-      return this.$axios.get('/api/db3/movies/date', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/date',
+        params: { 'startDate': this.filters.startDate, 'endDate': this.filters.endDate },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB3ByMovieName() {
-      const params = {
-        movieName: this.filters.movieName,
-      };
-      return this.$axios.get('/api/db3/movies/movieName', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/movieName',
+        params: { 'movieName': this.filters.movieName },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB3ByDirector() {
-      const params = {
-        director: this.filters.director,
-      };
-      return this.$axios.get('/api/db3/movies/director', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/director',
+        params: { 'director': this.filters.director },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB3ByActor() {
-      const params = {
-        actor: this.filters.actor,
-      };
-      return this.$axios.get('/api/db3/movies/actor', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/actor',
+        params: { 'actor': this.filters.actor },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB3ByGenre() {
-      const params = {
-        genre: this.filters.genre,
-      };
-      return this.$axios.get('/api/db3/movies/genre', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/genre',
+        params: { 'genre': this.filters.genre },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB3ByRating() {
-      const params = {
-        rating: this.filters.rating,
-      };
-      return this.$axios.get('/api/db3/movies/rating', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/rating',
+        params: { 'rating': this.filters.rating },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
     fetchFromDB3ByPositiveReview() {
-      const params = {
-        isPositiveReview: this.filters.isPositiveReview,
-      };
-      return this.$axios.get('/api/db3/movies/positiveReview', { params }).then(res => res.data);
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/positiveReview',
+        params: { 'isPositiveReview': this.filters.isPositiveReview },
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
 
     // 重置表单方法
     resetForm() {
       // 重置filters中的数据
       this.filters = {
-        startDate: [],
+        Date: [],
+        startDate: null,
         endDate: null,
         movieName: '',
         director: '',
         actor: '',
         genre: '', // 重置为默认值
         rating: 0,
-        isPositiveReview: false, // 重置为默认值
-      };
+        isPositiveReview: false // 重置为默认值
+      }
       // 清空表格数据
-      this.movieList = [];
-      this.totalCount = null; // 重置筛选数量
+      this.movieList = []
+      this.totalCount = null // 重置筛选数量
 
       // 如果需要重置表单样式，可以调用this.$refs.form.resetFields()
       this.$nextTick(() => {
-        this.$refs.form.clearValidate(); // 清除所有表单验证状态
-      });
-    },
-  },
-};
+        this.$refs.form.clearValidate() // 清除所有表单验证状态
+      })
+    }
+  }
+}
 </script>
+
 <style scoped>
 .container {
   display: flex;
@@ -501,6 +961,7 @@ export default {
   margin-top: 10px;
   margin-left: 20px;
 }
+
 
 .form-container {
   flex: 1; /* 左侧表单区域占据剩余空间 */
@@ -544,7 +1005,7 @@ export default {
   margin-bottom: 10px; /* 给每个表单项之间增加一些垂直间距 */
 }
 
-/* 让el-radio之间有间距 */
+/* ��el-radio之间有间距 */
 .radio-group .radio-option {
   margin-right: 30px !important; /* 强制应用样式，使"是"和"否"之间有足够间距 */
 }

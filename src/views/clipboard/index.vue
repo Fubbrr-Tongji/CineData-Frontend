@@ -18,7 +18,7 @@
 
         <!-- 显示筛选到的电影数量 -->
         <div class="total-count">
-          共筛选到 {{ totalCount }} 个电影数据
+          共展示 {{ totalCount }} 个数据
         </div>
         <!-- 显示查询时间 -->
         <div class="total-count">
@@ -172,52 +172,110 @@ export default {
     // 处理多个数据库的接口请求
     async searchMovies() {
       // 清空现有电影数据
-      this.movieList = []
+      this.movieList = [] // 清空之前的数据
       this.totalCount = 0
-
-      const startTime1 = Date.now()
+      const startTime1 = Date.now() // 记录第一个数据库查询开��时间
       const requests1 = this.fetchMoviesFromMySQL()
-      const results1 = await requests1
-      this.movieList = this.movieList.concat(results1)
-      this.totalCount = this.movieList.length
+      const results1 = await requests1.catch(error => {
+        console.error('MySQL 请求失败:', error)
+        return [] // 如果失败，返回空数组
+      })
+      this.movieList = this.movieList.concat(results1) // 合并数据
       const endTime1 = Date.now()
-      this.queryTime1 = endTime1 - startTime1 // 保存MySQL查询时间
+      this.queryTime1 = endTime1 - startTime1
 
+      // 第二个数据库查询
       const startTime2 = Date.now()
       const requests2 = this.fetchMoviesFromHive()
-      await requests2
+      const results2 = await requests2.catch(error => {
+        console.error('Hive 请求失败:', error)
+        return [] // 如果失败，返回空数组
+      })
+      this.movieList = this.movieList.concat(results2) // 合并数据
       const endTime2 = Date.now()
-      this.queryTime2 = endTime2 - startTime2 // 保存Hive查询时间
+      this.queryTime2 = endTime2 - startTime2
 
+      // 第三个数据库查询
       const startTime3 = Date.now()
       const requests3 = this.fetchMoviesFromNeo4j()
-      await requests3
+      const results3 = await requests3.catch(error => {
+        console.error('Neo4j 请求失败:', error)
+        return [] // 如果失败，返回空数组
+      })
+      this.movieList = this.movieList.concat(results3) // 合并数据
+      this.totalCount = this.movieList.length
       const endTime3 = Date.now()
-      this.queryTime3 = endTime3 - startTime3 // 保存Neo4j查询时间
+      this.queryTime3 = endTime3 - startTime3
     },
 
-    // 获取MySQL数据库的电影数据
     fetchMoviesFromMySQL() {
-      const params = {
-        genre: this.filters.genre // 添加风格过滤条件
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/mysql/movies/filter',
+        params: { 'genre': this.filters.genre },
+        headers: {}
       }
-      return this.$axios.get('/api/db1/movies/filter', { params }).then((res) => res.data)
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
 
     // 获取Hive数据库的电影数据
     fetchMoviesFromHive() {
-      const params = {
-        genre: this.filters.genre // 添加风格过滤条件
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/hive/movies/filter',
+        params: { 'genre': this.filters.genre },
+        headers: {}
       }
-      return this.$axios.get('/api/db2/movies/filter', { params }).then((res) => res.data)
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
-
     // 获取Neo4j数据库的电影数据
     fetchMoviesFromNeo4j() {
-      const params = {
-        genre: this.filters.genre // 添加风格过滤条件
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/neo4j/movies/filter',
+        params: { 'genre': this.filters.genre },
+        headers: {}
       }
-      return this.$axios.get('/api/db3/movies/filter', { params }).then((res) => res.data)
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
 
     // 重置表单方法

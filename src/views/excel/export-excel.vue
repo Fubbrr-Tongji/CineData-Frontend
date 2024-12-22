@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+    <!-- 显示筛选到的电影数量 -->
+        <!-- 显示查询时间 -->
+       
     <!-- 右侧表格区域 -->
     <el-button class="form-button" @click="showComparisonDialog">运行时间对比</el-button>
     <!-- 弹出框 -->
@@ -10,6 +13,11 @@
       @close="handleClose"
     >
       <div class="charts-container">
+        <div class="total-count">
+          <div>MySQL 查询耗时： {{ queryTime1 }} ms</div>
+          <div>Hive 查询耗时： {{ queryTime2 }} ms</div>
+          <div>Neo4j 查询耗时： {{ queryTime3 }} ms</div>
+        </div>
         <!-- 折线图 -->
         <div ref="lineChart" class="chart" style="height: 300px;" />
 
@@ -35,8 +43,7 @@ import * as echarts from 'echarts'
 export default {
   data() {
     return {
-    // 控制弹出框显示/隐藏
-      dialogVisible: false,
+      dialogVisible: false, // 控制弹出框显示/隐藏
       movieList: [], // 用于存储查询的演员合作数据
       queryTime1: 0, // 第一个数据库的查询时间
       queryTime2: 0, // 第二个数据库的查询时间
@@ -47,7 +54,7 @@ export default {
     this.fetchMovies()
   },
   methods: {
-  // 显示弹出框
+    // 显示弹出框
     showComparisonDialog() {
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -129,44 +136,111 @@ export default {
     },
     // 确认按钮点击处理
     handleOk() {
-      // 在这里处理确认逻辑
       console.log('确认对比')
-      this.dialogVisible = false // 关闭弹出框
+      this.dialogVisible = false
     },
     async fetchMovies() {
-      this.movieList = []
-      const startTime1 = Date.now() // 记录第一个数据库查询开始时间
+      this.movieList = [] // 清空之前的数据
+      const startTime1 = Date.now() // 记录第一个数据库查询开��时间
       const requests1 = this.fetchMoviesFromMySQL()
-      const results1 = await requests1
-      this.movieList = this.movieList.concat(results1)
-      const endTime1 = Date.now() // 记录第一个数据库查询结束时间
-      this.queryTime1 = endTime1 - startTime1 // 计算第一个数据库查询耗时
+      const results1 = await requests1.catch(error => {
+        console.error('MySQL 请求失败:', error)
+        return [] // 如果失败，返回空数组
+      })
+      this.movieList = this.movieList.concat(results1) // 合并数据
+      const endTime1 = Date.now()
+      this.queryTime1 = endTime1 - startTime1
 
-      // 第二个数据库查询（只记录查询时间，不合并数据）
-      const startTime2 = Date.now() // 记录第二个数据库查询开始时间
+      // 第二个数据库查询
+      const startTime2 = Date.now()
       const requests2 = this.fetchMoviesFromHive()
-      await requests2
-      const endTime2 = Date.now() // 记录第二个数据库查询结束时间
-      this.queryTime2 = endTime2 - startTime2 // 计算第二个数据库查询耗时
+      const results2 = await requests2.catch(error => {
+        console.error('Hive 请求失败:', error)
+        return [] // 如果失败，返回空数组
+      })
+      this.movieList = this.movieList.concat(results2) // 合并数据
+      const endTime2 = Date.now()
+      this.queryTime2 = endTime2 - startTime2
 
-      // 第三个数据库查询（只记录查询时间，不合并数据）
-      const startTime3 = Date.now() // 记录第三个数据库查询开始时间
+      // 第三个数据库查询
+      const startTime3 = Date.now()
       const requests3 = this.fetchMoviesFromNeo4j()
-      await requests3
-      const endTime3 = Date.now() // 记录第三个数据库查询结束时间
-      this.queryTime3 = endTime3 - startTime3 // 计算第三个数据库查询耗时
+      const results3 = await requests3.catch(error => {
+        console.error('Neo4j 请求失败:', error)
+        return [] // 如果失败，返回空数组
+      })
+      this.movieList = this.movieList.concat(results3) // 合并数据
+      const endTime3 = Date.now()
+      this.queryTime3 = endTime3 - startTime3
     },
 
     fetchMoviesFromMySQL() {
-      return this.$axios.get('/api/db1/movies/cooperationaa').then(res => res.data)
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8080/api/db1/movies/cooperationaa',
+        params: {},
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
 
     fetchMoviesFromHive() {
-      return this.$axios.get('/api/db2/movies/cooperationaa').then(res => res.data)
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8081/api/db2/movies/cooperationaa',
+        params: {},
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     },
 
     fetchMoviesFromNeo4j() {
-      return this.$axios.get('/api/db3/movies/cooperationaa').then(res => res.data)
+      var axios = require('axios')
+      var config = {
+        method: 'get',
+        url: 'http://localhost:8082/api/db3/movies/cooperationaa',
+        params: {},
+        headers: {}
+      }
+      return axios(config)
+        .then(response => {
+          if (Array.isArray(response.data)) {
+            return response.data
+          } else {
+            console.error('返回的数据格式不正确')
+            return []
+          }
+        })
+        .catch(error => {
+          console.log(error)
+          return []
+        })
     }
   }
 }
@@ -183,16 +257,8 @@ export default {
 
 .table-container {
   flex: 2;
-  padding-left: 20px; /* 左侧间距 */
-  padding-right: 20px; /* 右侧间距 */
-}
-
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 20px;
-  align-items: center;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .form-button {
